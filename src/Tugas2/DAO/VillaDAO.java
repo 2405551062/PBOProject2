@@ -11,11 +11,14 @@ public class VillaDAO {
 
     public VillaDAO(Connection conn) {
         this.conn = conn;
+        if (this.conn == null) {
+            System.err.println("Connection is null! DB connection failed.");
+        }
     }
 
     public List<Villas> getAllVillas() {
         List<Villas> villas = new ArrayList<>();
-        String sql = "SELECT id, name, location, price FROM villas";
+        String sql = "SELECT id, name, description, address FROM villas";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -37,7 +40,7 @@ public class VillaDAO {
     }
 
     public Villas getVillaById(int id) {
-        String sql = "SELECT id, name, location, price FROM villas WHERE id = ?";
+        String sql = "SELECT id, name, description, address FROM villas WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -57,7 +60,7 @@ public class VillaDAO {
     }
 
     public boolean insertVilla(Villas villa) {
-        String sql = "INSERT INTO villas (name, location, price) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO villas (name, description, address) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, villa.getName());
             stmt.setString(2, villa.getDescription());
@@ -71,7 +74,7 @@ public class VillaDAO {
     }
 
     public boolean updateVilla(Villas villa) {
-        String sql = "UPDATE villas SET name = ?, location = ?, price = ? WHERE id = ?";
+        String sql = "UPDATE villas SET name = ?, description = ?, address = ? WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, villa.getName());
             stmt.setString(2, villa.getDescription());
