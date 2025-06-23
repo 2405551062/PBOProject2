@@ -19,6 +19,7 @@ public class Controller {
     private ReviewsDAO reviewsDAO;
     private BookingsDAO bookingsDAO;
     private RoomsDAO roomsDAO;
+    private CustomersDAO customersDAO;
 
     public Controller() {
         try {
@@ -26,6 +27,8 @@ public class Controller {
             this.reviewsDAO = new ReviewsDAO(DB.getConnection());
             this.bookingsDAO = new BookingsDAO(DB.getConnection());
             this.roomsDAO = new RoomsDAO(DB.getConnection());
+            this.customersDAO = new CustomersDAO(DB.getConnection());
+
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -181,6 +184,21 @@ public class Controller {
         }
     }
 
+    public void getReviewsByCustomerId(HttpExchange exchange, int customerId) {
+        Response res = new Response(exchange);
+        try {
+            List<Reviews> reviews = reviewsDAO.getReviewsByCustomerId(customerId);
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(reviews);
+            res.setBody(json);
+            res.send(HttpURLConnection.HTTP_OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
     public void createReview(HttpExchange exchange, int bookingId) {
         Response res = new Response(exchange);
         Request req = new Request(exchange);
@@ -247,6 +265,64 @@ public class Controller {
             String json = mapper.writeValueAsString(bookings);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
+    public void createBooking(HttpExchange exchange) {
+        Response res = new Response(exchange);
+        Request req = new Request(exchange);
+
+        try {
+            Map<String, Object> body = req.getJSON();
+            if (body == null) {
+                res.setBody("{\"error\": \"Invalid JSON\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            Integer customer = (Integer) body.get("customer");
+            Integer roomType = (Integer) body.get("room_type");
+            String checkinDate = (String) body.get("checkin_date");
+            String checkoutDate = (String) body.get("checkout_date");
+            Integer price = (Integer) body.get("price");
+            Integer voucher = body.get("voucher") != null ? (Integer) body.get("voucher") : null;
+            Integer finalPrice = (Integer) body.get("final_price");
+            String paymentStatus = (String) body.get("payment_status");
+            Integer hasCheckedIn = (Integer) body.getOrDefault("has_checkedin", 0);
+            Integer hasCheckedOut = (Integer) body.getOrDefault("has_checkedout", 0);
+
+            if (customer == null || roomType == null || checkinDate == null || checkoutDate == null
+                    || price == null || finalPrice == null || paymentStatus == null) {
+                res.setBody("{\"error\": \"Missing required fields\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            Bookings booking = new Bookings();
+            booking.setCustomer(customer);
+            booking.setRoomType(roomType);
+            booking.setCheckinDate(checkinDate);
+            booking.setCheckoutDate(checkoutDate);
+            booking.setPrice(price);
+            booking.setVoucher(voucher);
+            booking.setFinalPrice(finalPrice);
+            booking.setPaymentStatus(paymentStatus);
+            booking.setHasCheckedIn(hasCheckedIn);
+            booking.setHasCheckedOut(hasCheckedOut);
+
+            boolean success = bookingsDAO.insertBooking(booking);
+            if (success) {
+                res.setBody("{\"message\": \"Booking created successfully\"}");
+                res.send(HttpURLConnection.HTTP_CREATED);
+            } else {
+                res.setBody("{\"error\": \"Failed to create booking\"}");
+                res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -386,5 +462,130 @@ public class Controller {
         }
     }
 
+    public void getAllCustomers(HttpExchange exchange) {
+        Response res = new Response(exchange);
+        try {
+            List<Customers> customers = customersDAO.getAllCustomers();
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(customers);
+            res.setBody(json);
+            res.send(HttpURLConnection.HTTP_OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
+    public void getCustomerById(HttpExchange exchange, int id) {
+        Response res = new Response(exchange);
+        try {
+            Customers customer = customersDAO.getCustomerById(id);
+            if (customer == null) {
+                res.setBody("{\"error\": \"Customer not found\"}");
+                res.send(HttpURLConnection.HTTP_NOT_FOUND);
+                return;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(customer);
+            res.setBody(json);
+            res.send(HttpURLConnection.HTTP_OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
+    public void createCustomer(HttpExchange exchange) {
+        Response res = new Response(exchange);
+        Request req = new Request(exchange);
+
+        try {
+            Map<String, Object> body = req.getJSON();
+            if (body == null) {
+                res.setBody("{\"error\": \"Invalid JSON\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            String name = (String) body.get("name");
+            String email = (String) body.get("email");
+            String phone = (String) body.get("phone");
+
+            if (name == null || email == null || phone == null) {
+                res.setBody("{\"error\": \"Missing required fields: name, email, phone\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            Customers customer = new Customers();
+            customer.setName(name);
+            customer.setEmail(email);
+            customer.setPhone(phone);
+
+            boolean success = customersDAO.insertCustomer(customer);
+            if (success) {
+                res.setBody("{\"message\": \"Customer created successfully\"}");
+                res.send(HttpURLConnection.HTTP_CREATED);
+            } else {
+                res.setBody("{\"error\": \"Failed to create customer\"}");
+                res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
+    public void updateCustomer(HttpExchange exchange, int id) {
+        Response res = new Response(exchange);
+        Request req = new Request(exchange);
+
+        try {
+            Map<String, Object> body = req.getJSON();
+            if (body == null) {
+                res.setBody("{\"error\": \"Invalid JSON\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            String name = (String) body.get("name");
+            String email = (String) body.get("email");
+            String phone = (String) body.get("phone");
+
+            if (name == null || email == null || phone == null) {
+                res.setBody("{\"error\": \"Missing required fields: name, email, phone\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            Customers customer = customersDAO.getCustomerById(id);
+            if (customer == null) {
+                res.setBody("{\"error\": \"Customer not found\"}");
+                res.send(HttpURLConnection.HTTP_NOT_FOUND);
+                return;
+            }
+
+            customer.setName(name);
+            customer.setEmail(email);
+            customer.setPhone(phone);
+
+            boolean updated = customersDAO.updateCustomer(customer);
+            if (updated) {
+                res.setBody("{\"message\": \"Customer updated successfully\"}");
+                res.send(HttpURLConnection.HTTP_OK);
+            } else {
+                res.setBody("{\"error\": \"Failed to update customer\"}");
+                res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
 }
 

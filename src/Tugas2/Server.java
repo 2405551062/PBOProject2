@@ -108,21 +108,67 @@ public class Server {
             String[] parts = path.split("/");
 
             try {
-                if (path.matches("^/customers/\\d+/bookings/\\d+/reviews$") && "POST".equals(method)) {
-                    int bookingId = Integer.parseInt(parts[4]);
+                // POST /customers/{id}/bookings/{id}/reviews
+                if (parts.length == 5 && "POST".equals(method) && parts[3].equals("bookings") && parts[4].equals("reviews")) {
+                    int bookingId = Integer.parseInt(parts[2]);
                     controller.createReview(exchange, bookingId);
-                } else {
-                    sendNotFound(exchange);
+                    return;
                 }
+
+                // GET /customers/{id}/bookings
+                if (parts.length == 4 && "bookings".equals(parts[3]) && "GET".equals(method)) {
+                    int customerId = Integer.parseInt(parts[2]);
+                    controller.getBookingsByCustomerId(exchange, customerId);
+                    return;
+                }
+
+                // POST /customers/{id}/bookings
+                if (parts.length == 4 && "bookings".equals(parts[3]) && "POST".equals(method)) {
+                    controller.createBooking(exchange); // could also pass customerId if needed
+                    return;
+                }
+
+                // GET /customers
+                if (parts.length == 2 && "GET".equals(method)) {
+                    controller.getAllCustomers(exchange);
+                    return;
+                }
+
+                // GET /customers/{id}
+                if (parts.length == 3 && "GET".equals(method)) {
+                    int id = Integer.parseInt(parts[2]);
+                    controller.getCustomerById(exchange, id);
+                    return;
+                }
+
+                // POST /customers
+                if (parts.length == 2 && "POST".equals(method)) {
+                    controller.createCustomer(exchange);
+                    return;
+                }
+
+                // PUT /customers/{id}
+                if (parts.length == 3 && "PUT".equals(method)) {
+                    int id = Integer.parseInt(parts[2]);
+                    controller.updateCustomer(exchange, id);
+                    return;
+                }
+
+                // GET /customers/{id}/reviews
+                if (parts.length == 4 && "reviews".equals(parts[3]) && "GET".equals(method)) {
+                    int customerId = Integer.parseInt(parts[2]);
+                    controller.getReviewsByCustomerId(exchange, customerId);
+                    return;
+                }
+
+                sendNotFound(exchange);
             } catch (Exception e) {
                 e.printStackTrace();
                 sendNotFound(exchange);
             }
         });
     }
-
-
-    private void sendNotFound(HttpExchange exchange) {
+        private void sendNotFound(HttpExchange exchange) {
         Response res = new Response(exchange);
         res.setBody("{\"error\": \"Not Found\"}");
         res.send(HttpURLConnection.HTTP_NOT_FOUND);
