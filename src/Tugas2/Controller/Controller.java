@@ -20,6 +20,7 @@ public class Controller {
     private BookingsDAO bookingsDAO;
     private RoomsDAO roomsDAO;
     private CustomersDAO customersDAO;
+    private VouchersDAO vouchersDAO;
 
     public Controller() {
         try {
@@ -28,6 +29,7 @@ public class Controller {
             this.bookingsDAO = new BookingsDAO(DB.getConnection());
             this.roomsDAO = new RoomsDAO(DB.getConnection());
             this.customersDAO = new CustomersDAO(DB.getConnection());
+            this.vouchersDAO = new VouchersDAO(DB.getConnection());
 
 
         } catch (SQLException e) {
@@ -587,5 +589,148 @@ public class Controller {
             res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
         }
     }
+
+    public void getAllVouchers(HttpExchange exchange) {
+        Response res = new Response(exchange);
+        try {
+            List<Vouchers> vouchers = vouchersDAO.getAllVouchers();
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(vouchers);
+            res.setBody(json);
+            res.send(HttpURLConnection.HTTP_OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
+    public void getVoucherById(HttpExchange exchange, int id) {
+        Response res = new Response(exchange);
+        try {
+            Vouchers voucher = vouchersDAO.getVoucherById(id);
+            if (voucher == null) {
+                res.setBody("{\"error\": \"Voucher not found\"}");
+                res.send(HttpURLConnection.HTTP_NOT_FOUND);
+                return;
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(voucher);
+            res.setBody(json);
+            res.send(HttpURLConnection.HTTP_OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
+    public void createVoucher(HttpExchange exchange) {
+        Response res = new Response(exchange);
+        Request req = new Request(exchange);
+
+        try {
+            Map<String, Object> reqBody = req.getJSON();
+            if (reqBody == null) {
+                res.setBody("{\"error\": \"Invalid or missing JSON\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            String code = (String) reqBody.get("code");
+            String description = (String) reqBody.get("description");
+            Double discount = (Double) reqBody.get("discount");
+            String startDate = (String) reqBody.get("start_date");
+            String endDate = (String) reqBody.get("end_date");
+
+            if (code == null || description == null || discount == null || startDate == null || endDate == null) {
+                res.setBody("{\"error\": \"Missing required fields\"}");
+                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
+                return;
+            }
+
+            Vouchers voucher = new Vouchers(code, description, discount, startDate, endDate);
+            vouchersDAO.insertVoucher(voucher);
+
+            res.setBody("{\"message\": \"Voucher created successfully\"}");
+            res.send(HttpURLConnection.HTTP_CREATED);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+        }
+    }
+
+    public void updateVoucher(HttpExchange exchange, int id) {
+        Response res = new Response(exchange);
+        Request req = new Request(exchange);
+
+        try {
+            Map<String, Object> reqBody = req.getJSON();
+
+            String code = (String) reqBody.get("code");
+            String description = (String) reqBody.get("description");
+            Double discount = (Double) reqBody.get("discount");
+            String startDate = (String) reqBody.get("start_date");
+            String endDate = (String) reqBody.get("end_date");
+
+            if (code == null || description == null || discount == null || startDate == null || endDate == null) {
+                res.setBody("{\"error\": \"Missing required fields\"}");
+                res.send(400);
+                return;
+            }
+
+            Vouchers existing = vouchersDAO.getVoucherById(id);
+            if (existing == null) {
+                res.setBody("{\"error\": \"Voucher not found\"}");
+                res.send(404);
+                return;
+            }
+
+            Vouchers updated = new Vouchers(id, code, description, discount, startDate, endDate);
+            boolean success = vouchersDAO.updateVoucher(id, updated);
+
+            if (success) {
+                res.setBody("{\"message\": \"Voucher updated successfully\"}");
+                res.send(200);
+            } else {
+                res.setBody("{\"error\": \"Failed to update voucher\"}");
+                res.send(500);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(500);
+        }
+    }
+
+    public void deleteVoucher(HttpExchange exchange, int id) {
+        Response res = new Response(exchange);
+        try {
+            Vouchers existing = vouchersDAO.getVoucherById(id);
+            if (existing == null) {
+                res.setBody("{\"error\": \"Voucher not found\"}");
+                res.send(404);
+                return;
+            }
+
+            boolean success = vouchersDAO.deleteVoucher(id);
+            if (success) {
+                res.setBody("{\"message\": \"Voucher deleted successfully\"}");
+                res.send(200);
+            } else {
+                res.setBody("{\"error\": \"Failed to delete voucher\"}");
+                res.send(500);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(500);
+        }
+    }
+
 }
 

@@ -167,6 +167,54 @@ public class Server {
                 sendNotFound(exchange);
             }
         });
+
+        server.createContext("/vouchers", (exchange) -> {
+            String path = exchange.getRequestURI().getPath();
+            String method = exchange.getRequestMethod();
+            String[] parts = path.split("/");
+
+
+            try {
+                // GET /vouchers (daftar semua voucher)
+                if (parts.length == 2 && "GET".equals(method)) {
+                    controller.getAllVouchers(exchange);
+                    return;
+                }
+
+                // GET /vouchers/{id}
+                if (parts.length == 3 && "GET".equals(method)) {
+                    int id = Integer.parseInt(parts[2]);
+                    controller.getVoucherById(exchange, id);
+                    return;
+                }
+
+                // POST /vouchers
+                if (parts.length == 2 && "POST".equals(method)) {
+                    controller.createVoucher(exchange);
+                    return;
+                }
+
+                // PUT /vouchers/{id}
+                if (parts.length == 3 && "PUT".equals(method)) {
+                    int id = Integer.parseInt(parts[2]);
+                    controller.updateVoucher(exchange, id);
+                    return;
+                }
+
+                // DELETE /vouchers/{id}
+                if (parts.length == 3 && "DELETE".equals(method)) {
+                    int id = Integer.parseInt(parts[2]);
+                    controller.deleteVoucher(exchange, id);
+                    return;
+                }
+
+                sendNotFound(exchange);
+            } catch (Exception e) {
+                e.printStackTrace();
+                sendNotFound(exchange);
+            }
+        });
+
     }
         private void sendNotFound(HttpExchange exchange) {
         Response res = new Response(exchange);
