@@ -5,6 +5,8 @@ import Tugas2.Model.*;
 import Tugas2.Request;
 import Tugas2.Response;
 import Tugas2.util.*;
+import Tugas2.Exception.UnauthorizedException;
+import static Tugas2.util.AuthUtil.isAuthorized;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
@@ -31,7 +33,6 @@ public class Controller {
             this.customersDAO = new CustomersDAO(DB.getConnection());
             this.vouchersDAO = new VouchersDAO(DB.getConnection());
 
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -40,6 +41,10 @@ public class Controller {
     public void GetAllVillas(HttpExchange exchange) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Villas> villas = villaDAO.getAllVillas();
 
             if (villas == null) {
@@ -50,6 +55,10 @@ public class Controller {
             String json = mapper.writeValueAsString(villas);
             res.setBody(json);
             res.send(200);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace(); // Debug log
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -62,6 +71,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> reqBody = req.getJSON();
             if (reqBody == null) {
                 res.setBody("{\"error\": \"Invalid or missing JSON\"}");
@@ -85,6 +98,9 @@ public class Controller {
             res.setBody("{\"message\": \"Villa created successfully\"}");
             res.send(HttpURLConnection.HTTP_CREATED);
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             res.setBody("{\"error\": \"Internal Server Error\"}");
             res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
@@ -96,6 +112,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> reqBody = req.getJSON();
             if (reqBody == null) {
                 res.setBody("{\"error\": \"Invalid or missing JSON\"}");
@@ -129,6 +149,9 @@ public class Controller {
             res.setBody("{\"message\": \"Villa updated successfully\"}");
             res.send(HttpURLConnection.HTTP_OK);
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             res.setBody("{\"error\": \"Internal Server Error\"}");
             res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
@@ -140,6 +163,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> reqBody = req.getJSON();
             if (reqBody == null) {
                 res.setBody("{\"error\": \"Invalid or missing JSON\"}");
@@ -165,20 +192,64 @@ public class Controller {
             res.setBody("{\"message\": \"Villa deleted successfully\"}");
             res.send(HttpURLConnection.HTTP_OK);
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             res.setBody("{\"error\": \"Internal Server Error\"}");
             res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
         }
     }
 
+    public void getAvailableVillasByDate(HttpExchange exchange) {
+        Response res = new Response(exchange);
+        try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
+            Map<String, String> queryParams = QueryParser.parseQueryParams(exchange.getRequestURI().getQuery());
+
+            String ciDate = queryParams.get("ci_date");
+            String coDate = queryParams.get("co_date");
+
+            if (ciDate == null || coDate == null) {
+                res.setBody("{\"error\": \"Missing ci_date or co_date\"}");
+                res.send(400);
+                return;
+            }
+
+            List<Villas> availableVillas = villaDAO.getAvailableVillas(ciDate, coDate);
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(availableVillas);
+            res.setBody(json);
+            res.send(200);
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(500);
+        }
+    }
+
     public void getReviewsByVillaId(HttpExchange exchange, int villaId) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Reviews> reviews = reviewsDAO.getReviewsByVillaId(villaId);
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(reviews);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -189,11 +260,19 @@ public class Controller {
     public void getReviewsByCustomerId(HttpExchange exchange, int customerId) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Reviews> reviews = reviewsDAO.getReviewsByCustomerId(customerId);
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(reviews);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -206,6 +285,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> reqBody = req.getJSON();
             if (reqBody == null) {
                 res.setBody("{\"error\": \"Invalid or missing JSON\"}");
@@ -238,6 +321,9 @@ public class Controller {
                 res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
             }
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -248,25 +334,42 @@ public class Controller {
     public void getBookingsByVillaId(HttpExchange exchange, int villaId) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Bookings> bookings = bookingsDAO.getBookingsByVillaId(villaId);
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(bookings);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
             res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
         }
     }
+
     public void getBookingsByCustomerId(HttpExchange exchange, int customerId) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Bookings> bookings = bookingsDAO.getBookingsByCustomerId(customerId);
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(bookings);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -279,6 +382,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> body = req.getJSON();
             if (body == null) {
                 res.setBody("{\"error\": \"Invalid JSON\"}");
@@ -325,6 +432,9 @@ public class Controller {
                 res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
             }
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -335,11 +445,19 @@ public class Controller {
     public void getRoomsByVillaId(HttpExchange exchange, int villaId) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Rooms> rooms = roomsDAO.getRoomsByVillaId(villaId);
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(rooms);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -352,6 +470,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> body = req.getJSON();
             if (body == null) {
                 res.setBody("{\"error\": \"Invalid JSON\"}");
@@ -395,6 +517,9 @@ public class Controller {
                 res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
             }
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -407,6 +532,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> body = req.getJSON();
             if (body == null) {
                 res.setBody("{\"error\": \"Invalid JSON\"}");
@@ -438,6 +567,10 @@ public class Controller {
                 res.setBody("{\"error\": \"Failed to update room\"}");
                 res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
             }
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -449,6 +582,10 @@ public class Controller {
         Response res = new Response(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             boolean deleted = roomsDAO.deleteRoom(roomId);
             if (deleted) {
                 res.setBody("{\"message\": \"Room deleted successfully\"}");
@@ -457,6 +594,10 @@ public class Controller {
                 res.setBody("{\"error\": \"Failed to delete room\"}");
                 res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
             }
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -467,11 +608,19 @@ public class Controller {
     public void getAllCustomers(HttpExchange exchange) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Customers> customers = customersDAO.getAllCustomers();
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(customers);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -482,6 +631,10 @@ public class Controller {
     public void getCustomerById(HttpExchange exchange, int id) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Customers customer = customersDAO.getCustomerById(id);
             if (customer == null) {
                 res.setBody("{\"error\": \"Customer not found\"}");
@@ -493,6 +646,10 @@ public class Controller {
             String json = mapper.writeValueAsString(customer);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -505,6 +662,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> body = req.getJSON();
             if (body == null) {
                 res.setBody("{\"error\": \"Invalid JSON\"}");
@@ -535,6 +696,10 @@ public class Controller {
                 res.setBody("{\"error\": \"Failed to create customer\"}");
                 res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
             }
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -547,6 +712,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> body = req.getJSON();
             if (body == null) {
                 res.setBody("{\"error\": \"Invalid JSON\"}");
@@ -583,6 +752,10 @@ public class Controller {
                 res.setBody("{\"error\": \"Failed to update customer\"}");
                 res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
             }
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -593,11 +766,19 @@ public class Controller {
     public void getAllVouchers(HttpExchange exchange) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             List<Vouchers> vouchers = vouchersDAO.getAllVouchers();
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(vouchers);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -608,6 +789,10 @@ public class Controller {
     public void getVoucherById(HttpExchange exchange, int id) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Vouchers voucher = vouchersDAO.getVoucherById(id);
             if (voucher == null) {
                 res.setBody("{\"error\": \"Voucher not found\"}");
@@ -618,6 +803,10 @@ public class Controller {
             String json = mapper.writeValueAsString(voucher);
             res.setBody(json);
             res.send(HttpURLConnection.HTTP_OK);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -630,6 +819,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> reqBody = req.getJSON();
             if (reqBody == null) {
                 res.setBody("{\"error\": \"Invalid or missing JSON\"}");
@@ -655,6 +848,9 @@ public class Controller {
             res.setBody("{\"message\": \"Voucher created successfully\"}");
             res.send(HttpURLConnection.HTTP_CREATED);
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -667,6 +863,10 @@ public class Controller {
         Request req = new Request(exchange);
 
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Map<String, Object> reqBody = req.getJSON();
 
             String code = (String) reqBody.get("code");
@@ -699,6 +899,9 @@ public class Controller {
                 res.send(500);
             }
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -709,6 +912,10 @@ public class Controller {
     public void deleteVoucher(HttpExchange exchange, int id) {
         Response res = new Response(exchange);
         try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
             Vouchers existing = vouchersDAO.getVoucherById(id);
             if (existing == null) {
                 res.setBody("{\"error\": \"Voucher not found\"}");
@@ -725,6 +932,9 @@ public class Controller {
                 res.send(500);
             }
 
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
         } catch (Exception e) {
             e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
@@ -733,4 +943,3 @@ public class Controller {
     }
 
 }
-

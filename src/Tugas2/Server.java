@@ -24,8 +24,10 @@ public class Server {
             String path = exchange.getRequestURI().getPath();
             String method = exchange.getRequestMethod();
             String[] parts = path.split("/");
+            String query = exchange.getRequestURI().getQuery();
 
             try {
+                // /villas/{id}/reviews
                 if (path.matches("^/villas/\\d+/reviews$")) {
                     int villaId = Integer.parseInt(parts[2]);
                     if ("GET".equals(method)) {
@@ -36,6 +38,7 @@ public class Server {
                     return;
                 }
 
+                // /villas/{id}/bookings
                 if (path.matches("^/villas/\\d+/bookings$")) {
                     int villaId = Integer.parseInt(parts[2]);
                     if ("GET".equals(method)) {
@@ -46,29 +49,35 @@ public class Server {
                     return;
                 }
 
-                if (parts.length >= 4 && parts[1].equals("villas") && parts[3].equals("rooms")) {
+                // /villas/{id}/rooms and /villas/{id}/rooms/{roomId}
+                if (parts.length >= 4 && "villas".equals(parts[1]) && "rooms".equals(parts[3])) {
                     int villaId = Integer.parseInt(parts[2]);
 
                     if (parts.length == 4) {
-                        if ("GET".equals(method)) {
-                            controller.getRoomsByVillaId(exchange, villaId);
-                        } else if ("POST".equals(method)) {
-                            controller.createRoom(exchange, villaId);
-                        } else {
-                            sendNotFound(exchange);
+                        switch (method) {
+                            case "GET":
+                                controller.getRoomsByVillaId(exchange, villaId);
+                                break;
+                            case "POST":
+                                controller.createRoom(exchange, villaId);
+                                break;
+                            default:
+                                sendNotFound(exchange);
                         }
                         return;
                     }
 
                     if (parts.length == 5) {
                         int roomId = Integer.parseInt(parts[4]);
-
-                        if ("PUT".equals(method)) {
-                            controller.updateRoom(exchange, villaId, roomId);
-                        } else if ("DELETE".equals(method)) {
-                            controller.deleteRoom(exchange, villaId, roomId);
-                        } else {
-                            sendNotFound(exchange);
+                        switch (method) {
+                            case "PUT":
+                                controller.updateRoom(exchange, villaId, roomId);
+                                break;
+                            case "DELETE":
+                                controller.deleteRoom(exchange, villaId, roomId);
+                                break;
+                            default:
+                                sendNotFound(exchange);
                         }
                         return;
                     }
@@ -77,6 +86,13 @@ public class Server {
                     return;
                 }
 
+                // /villas?ci_date=...&co_date=...
+                if ("GET".equals(method) && query != null && query.contains("ci_date") && query.contains("co_date")) {
+                    controller.getAvailableVillasByDate(exchange);
+                    return;
+                }
+
+                // /villas (base endpoint)
                 switch (method) {
                     case "GET":
                         controller.GetAllVillas(exchange);

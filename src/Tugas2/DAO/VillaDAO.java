@@ -59,6 +59,39 @@ public class VillaDAO {
         return null;
     }
 
+    public List<Villas> getAvailableVillas(String checkinDate, String checkoutDate) {
+        List<Villas> villas = new ArrayList<>();
+        String sql = """
+        SELECT * FROM villas
+        WHERE id NOT IN (
+            SELECT rt.villa
+            FROM bookings b
+            JOIN room_types rt ON b.room_type = rt.id
+            WHERE b.checkin_date < ? AND b.checkout_date > ?
+        )
+    """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, checkoutDate);  // first param: b.checkin_date < checkoutDate
+            stmt.setString(2, checkinDate);   // second param: b.checkout_date > checkinDate
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Villas villa = new Villas();
+                    villa.setId(rs.getInt("id"));
+                    villa.setName(rs.getString("name"));
+                    villa.setDescription(rs.getString("description"));
+                    villa.setAddress(rs.getString("address"));
+                    villas.add(villa);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return villas;
+    }
+
     public boolean insertVilla(Villas villa) {
         String sql = "INSERT INTO villas (name, description, address) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

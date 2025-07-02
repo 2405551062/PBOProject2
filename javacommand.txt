@@ -1,0 +1,3 @@
+javac -cp ".;lib\sqlite-jdbc-3.42.0.0.jar;lib\jackson-annotations-2.13.3.jar;lib\jackson-core-2.13.3.jar;lib\jackson-databind-2.13.3.jar" src\Tugas2\*.java src\Tugas2\DAO\*.java src\Tugas2\Controller\*.java src\Tugas2\Model\*.java src\Tugas2\util\*.java src\Tugas2\Exception\*.java
+
+java -cp ".;src;lib\sqlite-jdbc-3.42.0.0.jar;lib\jackson-annotations-2.13.3.jar;lib\jackson-core-2.13.3.jar;lib\jackson-databind-2.13.3.jar" Tugas2.Main
