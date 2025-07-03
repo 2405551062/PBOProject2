@@ -2,7 +2,8 @@ Project 2
 -
 **Pembuatan API Pemesanan Vila Sederhana Berbasis Java**
 -
-introduction bla bla bla
+Proyek ini adalah simulasi sederhana REST API menggunakan Java. Proyek ini dibuat untuk memahami konsep dasar OOP (Object-Oriented Programming), khususnya penggunaan class, object, dan bagaimana alur request-response di server.
+Simulasi ini terdiri dari beberapa class utama yang memiliki peran masing-masing, mulai dari menerima request, memproses, hingga mengirim response.
 
 Main classes
 -
