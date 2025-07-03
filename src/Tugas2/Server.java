@@ -28,7 +28,7 @@ public class Server {
 
             try {
                 // /villas/{id}/reviews
-                if (path.matches("^/villas/\\d+/reviews$")) {
+                if (parts.length == 4 && "villas".equals(parts[1]) && "reviews".equals(parts[3])) {
                     int villaId = Integer.parseInt(parts[2]);
                     if ("GET".equals(method)) {
                         controller.getReviewsByVillaId(exchange, villaId);
@@ -39,7 +39,7 @@ public class Server {
                 }
 
                 // /villas/{id}/bookings
-                if (path.matches("^/villas/\\d+/bookings$")) {
+                if (parts.length == 4 && "villas".equals(parts[1]) && "bookings".equals(parts[3])) {
                     int villaId = Integer.parseInt(parts[2]);
                     if ("GET".equals(method)) {
                         controller.getBookingsByVillaId(exchange, villaId);
@@ -86,6 +86,31 @@ public class Server {
                     return;
                 }
 
+                // /villas/{id}
+                if (parts.length == 3 && "villas".equals(parts[1])) {
+                    int villaId;
+                    try {
+                        villaId = Integer.parseInt(parts[2]);
+                    } catch (NumberFormatException e) {
+                        Response res = new Response(exchange);
+                        res.setBody("{\"error\":\"Invalid ID format\"}");
+                        res.send(400);
+                        return;
+                    }
+
+                    switch (method) {
+                        case "GET":
+                            controller.getVillaById(exchange);
+                            break;
+                        case "DELETE":
+                            controller.handleDelete(exchange, villaId);
+                            break;
+                        default:
+                            sendNotFound(exchange);
+                    }
+                    return;
+                }
+
                 // /villas?ci_date=...&co_date=...
                 if ("GET".equals(method) && query != null && query.contains("ci_date") && query.contains("co_date")) {
                     controller.getAvailableVillasByDate(exchange);
@@ -93,24 +118,26 @@ public class Server {
                 }
 
                 // /villas (base endpoint)
-                switch (method) {
-                    case "GET":
-                        controller.GetAllVillas(exchange);
-                        break;
-                    case "POST":
-                        controller.handleCreate(exchange);
-                        break;
-                    case "PUT":
-                        controller.handleUpdate(exchange);
-                        break;
-                    case "DELETE":
-                        controller.handleDelete(exchange);
-                        break;
-                    default:
-                        Response res = new Response(exchange);
-                        res.setBody("{\"error\":\"Method Not Allowed\"}");
-                        res.send(405);
+                if (parts.length == 2 && "villas".equals(parts[1])) {
+                    switch (method) {
+                        case "GET":
+                            controller.GetAllVillas(exchange);
+                            break;
+                        case "POST":
+                            controller.handleCreate(exchange);
+                            break;
+                        case "PUT":
+                            controller.handleUpdate(exchange);
+                            break;
+                        default:
+                            Response res = new Response(exchange);
+                            res.setBody("{\"error\":\"Method Not Allowed\"}");
+                            res.send(405);
+                    }
+                    return;
                 }
+
+                sendNotFound(exchange); // fallback if none matched
             } catch (Exception e) {
                 e.printStackTrace();
                 sendNotFound(exchange);
@@ -124,9 +151,14 @@ public class Server {
             String[] parts = path.split("/");
 
             try {
-                // POST /customers/{id}/bookings/{id}/reviews
-                if (parts.length == 5 && "POST".equals(method) && parts[3].equals("bookings") && parts[4].equals("reviews")) {
-                    int bookingId = Integer.parseInt(parts[2]);
+                // POST /customers/{customerId}/bookings/{bookingId}/reviews
+                if (parts.length == 6 &&
+                        "POST".equals(method) &&
+                        "customers".equals(parts[1]) &&
+                        "bookings".equals(parts[3]) &&
+                        "reviews".equals(parts[5])) {
+
+                    int bookingId = Integer.parseInt(parts[4]);
                     controller.createReview(exchange, bookingId);
                     return;
                 }

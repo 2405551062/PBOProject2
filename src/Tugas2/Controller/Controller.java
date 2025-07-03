@@ -66,6 +66,54 @@ public class Controller {
         }
     }
 
+    public void getVillaById(HttpExchange exchange) {
+        Response res = new Response(exchange);
+
+        try {
+            if (!isAuthorized(exchange)) {
+                throw new UnauthorizedException();
+            }
+
+            String path = exchange.getRequestURI().getPath();
+            String[] segments = path.split("/");
+            if (segments.length < 3) {
+                res.setBody("{\"error\": \"Villa ID not provided\"}");
+                res.send(400);
+                return;
+            }
+
+            int id;
+            try {
+                id = Integer.parseInt(segments[2]);
+            } catch (NumberFormatException e) {
+                res.setBody("{\"error\": \"Invalid ID format\"}");
+                res.send(400);
+                return;
+            }
+
+            Villas villa = villaDAO.getVillaById(id);
+
+            if (villa == null) {
+                res.setBody("{\"error\": \"Villa not found\"}");
+                res.send(404);
+                return;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(villa);
+            res.setBody(json);
+            res.send(200);
+
+        } catch (UnauthorizedException e) {
+            res.setBody("{\"error\": \"Unauthorized\"}");
+            res.send(401);
+        } catch (Exception e) {
+            e.printStackTrace(); // Debug log
+            res.setBody("{\"error\": \"Internal Server Error\"}");
+            res.send(500);
+        }
+    }
+
     public void handleCreate(HttpExchange exchange) {
         Response res = new Response(exchange);
         Request req = new Request(exchange);
@@ -158,27 +206,12 @@ public class Controller {
         }
     }
 
-    public void handleDelete(HttpExchange exchange) {
+    public void handleDelete(HttpExchange exchange, int id) {
         Response res = new Response(exchange);
-        Request req = new Request(exchange);
 
         try {
             if (!isAuthorized(exchange)) {
                 throw new UnauthorizedException();
-            }
-
-            Map<String, Object> reqBody = req.getJSON();
-            if (reqBody == null) {
-                res.setBody("{\"error\": \"Invalid or missing JSON\"}");
-                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
-                return;
-            }
-
-            Integer id = (Integer) reqBody.get("id");
-            if (id == null) {
-                res.setBody("{\"error\": \"Missing required field: id\"}");
-                res.send(HttpURLConnection.HTTP_BAD_REQUEST);
-                return;
             }
 
             Villas villa = villaDAO.getVillaById(id);
@@ -188,14 +221,20 @@ public class Controller {
                 return;
             }
 
-            villaDAO.deleteVilla(id);
-            res.setBody("{\"message\": \"Villa deleted successfully\"}");
-            res.send(HttpURLConnection.HTTP_OK);
+            boolean success = villaDAO.deleteVilla(id);
+            if (success) {
+                res.setBody("{\"message\": \"Villa deleted successfully\"}");
+                res.send(HttpURLConnection.HTTP_OK);
+            } else {
+                res.setBody("{\"error\": \"Failed to delete villa\"}");
+                res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            }
 
         } catch (UnauthorizedException e) {
             res.setBody("{\"error\": \"Unauthorized\"}");
             res.send(401);
         } catch (Exception e) {
+            e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
             res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
         }
