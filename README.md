@@ -76,13 +76,34 @@ Fungsi utama:
 Highlight logika:
 - Port: Bisa diatur (default 8080), diinisiasi saat pembuatan server.
 - Routing utama:
-  - /villas: Mendukung GET (list semua villa), POST (create villa), PUT (update), DELETE (delete), serta filtering villa berdasarkan tanggal (check-in, check-out).
-  - /villas/{id}/reviews: GET review berdasarkan ID villa.
-  - /villas/{id}/bookings: GET booking berdasarkan ID villa.
-  - /villas/{id}/rooms: GET & POST rooms untuk villa tertentu, PUT & DELETE untuk room tertentu.
-  - /customers: Mendukung GET (list semua customer), POST (create), GET by ID, PUT update, serta akses bookings & reviews.
-  - /customers/{id}/bookings/{id}/reviews: POST untuk membuat review pada booking tertentu.
-  - /vouchers: Mendukung GET (list semua voucher atau by ID), POST, PUT, DELETE.
+  
+| Entitas  | Metode  | Endpoint                                      | Deskripsi                                                                 |
+|----------|---------|-----------------------------------------------|---------------------------------------------------------------------------|
+| Villa    | GET     | /villas                                       | Daftar semua vila                                                         |
+| Villa    | GET     | /villas/{id}                                  | Informasi detail suatu vila                                               |
+| Villa    | GET     | /villas/{id}/rooms                            | Informasi kamar suatu vila, lengkap dengan fasilitas dan harga            |
+| Villa    | GET     | /villas/{id}/bookings                         | Daftar semua booking pada suatu vila                                      |
+| Villa    | GET     | /villas/{id}/reviews                          | Daftar semua review pada suatu vila                                       |
+| Villa    | GET     | /villas?ci_date={checkin_date}&co_date={checkout_date} | Pencarian ketersediaan vila berdasarkan tanggal check-in dan checkout     |
+| Villa    | POST    | /villas                                       | Menambahkan data vila                                                     |
+| Villa    | POST    | /villas/{id}/rooms                            | Menambahkan tipe kamar pada vila                                          |
+| Villa    | PUT     | /villas/{id}                                  | Mengubah data suatu vila                                                  |
+| Villa    | PUT     | /villas/{id}/rooms/{id}                       | Mengubah informasi kamar suatu vila                                       |
+| Villa    | DELETE  | /villas/{id}/rooms/{id}                       | Menghapus kamar suatu vila                                                |
+| Villa    | DELETE  | /villas/{id}                                  | Menghapus data suatu vila                                                 |
+| Customer | GET     | /customers                                    | Daftar semua customer                                                     |
+| Customer | GET     | /customers/{id}                               | Informasi detail seorang customer                                         |
+| Customer | GET     | /customers/{id}/bookings                      | Daftar booking oleh seorang customer                                      |
+| Customer | GET     | /customers/{id}/reviews                       | Daftar ulasan oleh customer                                               |
+| Customer | POST    | /customers                                    | Menambahkan customer baru (registrasi)                                    |
+| Customer | POST    | /customers/{id}/bookings                      | Customer melakukan pemesanan vila                                         |
+| Customer | POST    | /customers/{id}/bookings/{id}/reviews        | Customer memberikan ulasan berdasarkan booking                            |
+| Customer | PUT     | /customers/{id}                               | Mengubah data customer                                                    |
+| Voucher  | GET     | /vouchers                                     | Daftar semua voucher                                                      |
+| Voucher  | GET     | /vouchers/{id}                                | Informasi detail suatu voucher                                            |
+| Voucher  | POST    | /vouchers                                     | Membuat voucher baru                                                      |
+| Voucher  | PUT     | /vouchers/{id}                                | Mengubah data voucher                                                     |
+| Voucher  | DELETE  | /vouchers/{id}                                | Menghapus data voucher                                                    |
 - Fallback: Jika route tidak ditemukan atau method tidak sesuai, server mengembalikan response 404 Not Found.
 
 Contoh alur:
