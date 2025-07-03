@@ -190,4 +190,13 @@ util
 
 API Demonstration
 -
-isi endpoint.. (http://localhost:8080/villas.. dst..)
+**Run Program**
+Gunakan perintah berikut untuk mengkompilasi semua file Java dalam proyek, termasuk DAO, pengontrol, model, utilitas, dan pengecualian khusus
+
+1. javac -cp ".;lib\sqlite-jdbc-3.42.0.0.jar;lib\jackson-annotations-2.13.3.jar;lib\jackson-core-2.13.3.jar;lib\jackson-databind-2.13.3.jar" src\Tugas2\*.java src\Tugas2\DAO\*.java src\Tugas2\Controller\*.java src\Tugas2\Model\*.java src\Tugas2\util\*.java src\Tugas2\Exception\*.java
+
+2. java -cp ".;src;lib\sqlite-jdbc-3.42.0.0.jar;lib\jackson-annotations-2.13.3.jar;lib\jackson-core-2.13.3.jar;lib\jackson-databind-2.13.3.jar" Tugas2.Main
+
+![RunProgram](https://github.com/user-attachments/assets/67ed5c50-91ac-4c1f-ad40-3b3ce6b3a77a)
+
+Pesan yang ditampilkan di terminal (Mendengarkan di port: 8080..., Server dimulai di port: 8080) menunjukkan bahwa server API Java telah berhasil dikompilasi dan sekarang sedang berjalan. Output ini dihasilkan dari kelas Main.java Anda, khususnya dari bagian kode yang menyiapkan server HTTP menggunakan HttpServer bawaan Java. Ini berarti server secara aktif mendengarkan permintaan HTTP yang masuk di port 8080, yang dapat diakses melalui http://localhost:8080 dari browser atau alat API Anda. Pada titik ini, kita dapat mulai menguji titik akhir API Anda menggunakan alat seperti Postman.
