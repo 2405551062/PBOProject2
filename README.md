@@ -251,8 +251,64 @@ Client mengirim data lewat POST /rooms dengan informasi seperti nama kamar, kapa
 
 
 **VillaDAO.java**
+-
+VillaDAO adalah class yang digunakan untuk mengelola data vila yang tersimpan di dalam database. Class ini bertugas untuk mengambil daftar vila, mengambil vila berdasarkan ID, menambahkan vila baru, memperbarui vila, menghapus vila, dan mengecek vila yang tersedia berdasarkan tanggal check-in dan check-out.
+
+Fungsi utama:
+- getAllVillas()  
+  Mengambil semua data vila dari database. Data yang diambil termasuk ID, nama vila, deskripsi, dan alamat.
+- getVillaById(int id)  
+  Mengambil data satu vila berdasarkan ID tertentu.
+- getAvailableVillas(String checkinDate, String checkoutDate)  
+  Mengambil daftar vila yang masih tersedia pada rentang tanggal yang diberikan. Digunakan saat ingin melihat vila mana yang belum dipesan.
+- insertVilla(Villas villa)  
+  Menyimpan data vila baru ke database, seperti nama, deskripsi, dan alamat.
+- updateVilla(Villas villa)  
+  Mengubah data vila yang sudah ada berdasarkan ID vila tersebut.
+- deleteVilla(int id)  
+  Menghapus data vila dari database berdasarkan ID.
+
+Highlight logika:
+- Method getAvailableVillas() menggunakan query SQL dengan kondisi NOT IN, artinya akan mencari vila yang tidak sedang dibooking dalam tanggal yang ditentukan.  
+- Semua pengolahan data menggunakan PreparedStatement agar lebih aman dan mencegah SQL Injection.  
+- Untuk membaca data dari ResultSet, data langsung dimasukkan ke objek Villas agar mudah diproses di dalam program.
+
+Contoh alur:
+
+Client ingin mencari vila yang tersedia untuk disewa dari tanggal 10 Juli sampai 12 Juli.  
+Client mengirim request GET ke /villas/available?checkin=2025-07-10&checkout=2025-07-12.Server akan:
+- Membaca parameter tanggal dari request.  
+- Memanggil method getAvailableVillas(checkin, checkout).  
+- Method ini akan mencari vila yang tidak sedang dibooking pada rentang tanggal tersebut.  
+- Hasilnya dikirim kembali ke client dalam bentuk JSON.
 
 **VouchersDAO.java**
+-
+VouchersDAO adalah class yang digunakan untuk mengelola data voucher diskon yang ada di dalam database. Dengan class ini, server bisa menampilkan semua voucher, mencari voucher tertentu, menambah voucher baru, memperbarui voucher yang sudah ada, atau menghapus voucher berdasarkan ID.
+
+Fungsi utama:
+- getAllVouchers()  
+  Mengambil semua data voucher dari database dan mengurutkannya berdasarkan ID.
+- getVoucherById(int id)  
+  Mengambil satu voucher berdasarkan ID tertentu.
+- insertVoucher(Vouchers voucher)  
+  Menambahkan voucher baru ke database. Data yang dimasukkan seperti kode voucher, deskripsi, diskon, tanggal mulai, dan tanggal berakhir.
+- updateVoucher(int id, Vouchers voucher)  
+  Memperbarui isi voucher berdasarkan ID. Misalnya, kita ingin mengganti besar diskon atau mengubah tanggal berlakunya.
+- deleteVoucher(int id)  
+  Menghapus voucher dari database berdasarkan ID.
+
+Highlight logika:
+- Data voucher seperti diskon disimpan dalam format desimal (double), sehingga bisa 10%, 25.5%, dll.  
+- Digunakan helper method mapResultSetToVoucher() untuk mengubah hasil query ke bentuk objek Vouchers.  
+- Seluruh query dijalankan dengan PreparedStatement agar lebih aman dari SQL Injection.
+
+Contoh alur:
+
+Seorang admin ingin menambahkan voucher diskon baru untuk promosi liburan.  
+Admin mengisi data seperti kode voucher, besar diskon, serta tanggal mulai dan akhir.  
+Setelah data dikirim ke server, sistem menyimpannya ke database sebagai voucher baru.  
+Ketika pelanggan melakukan pemesanan, mereka bisa menggunakan kode voucher ini untuk mendapatkan potongan harga selama periode berlaku.
 
 Exception
 -
