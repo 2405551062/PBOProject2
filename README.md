@@ -98,7 +98,35 @@ Note:
 Controller
 -
 **Controller.java**
+-
+Class Controller berfungsi sebagai central handler atau "pengatur logika" untuk setiap endpoint dalam server. File ini menjadi jembatan antara request yang diterima server dan data/logic yang akan dijalankan.
 
+Fungsi utama :
+- Menyediakan method-method yang menangani setiap path endpoint (seperti /villas, /customers, /vouchers, dll.).
+- Menyusun logika bisnis (business logic) sesuai permintaan client, seperti mengambil data villa, menambahkan booking, memberikan review, dan sebagainya.
+- Berkomunikasi dengan class lain (misalnya Request, Response, atau model data) untuk memproses request dan membentuk response.
+
+Highlight logika :
+- Setiap method di dalam Controller mewakili satu aksi, misalnya:
+  - getAllVillas(): mengambil daftar semua villa.
+  - createVilla(): membuat villa baru.
+  - updateVilla(): memperbarui data villa.
+  - deleteVilla(): menghapus villa.
+  - Dan method serupa untuk customer, booking, review, serta voucher.
+- Tidak menggunakan framework seperti Spring Boot, melainkan menggunakan Java HTTP Server native (com.sun.net.httpserver.HttpServer).
+- Mengandalkan class Request dan Response untuk membaca HTTP request dan mengirimkan HTTP response.
+- Mengembalikan data dalam bentuk JSON (format text), menggunakan Response.setBody() dan Response.send(statusCode).
+
+Contoh alur :
+- Client mengirim request ke server, misalnya GET /villas.
+- Server mendeteksi path dan method, lalu memanggil controller.getAllVillas(request, response).
+- Method getAllVillas() membaca request (jika perlu), memproses logika (misalnya membaca data villa dari list/array), lalu mengembalikan response JSON.
+
+Note :
+- Class Controller dibuat supaya kode server tetap terstruktur (tidak semua logic langsung di Server.java).
+- Setiap handler endpoint hanya memanggil satu method controller agar lebih modular dan mudah diperluas.
+- Bisa dikembangkan untuk validasi tambahan (misalnya cek parameter, cek header, cek token API_KEY).
+  
 DAO (Data Access Object)
 -
 **BookingsDAO.java**
