@@ -173,15 +173,82 @@ Client ingin memesan vila, lalu mengirim data booking baru lewat POST (misalnya 
 Server akan:
   -  Menerima data dari client (seperti tanggal check-in, tipe kamar, dll).
   -  Mengubah data tersebut menjadi objek Bookings.
-  -  Memanggil method insertBooking() untuk menyimpan data ke database.
+  -  Memanggil method insertBooking() untuk menyimpan data ke databas
   -  jika berhasil, server akan mengirim response ke client bahwa booking berhasil dibuat.
 
-
 **CustomersDAO.java**
+-
+CustomersDAO adalah class yang digunakan untuk mengatur data pelanggan (customer) di database. Dengan class ini, server bisa mengambil semua data pelanggan, mengambil data berdasarkan ID, menambahkan pelanggan baru, atau mengubah data pelanggan yang sudah ada.
+
+Fungsi utama:
+- getAllCustomers()  
+  Mengambil semua data customer dari tabel customers. Data diurutkan berdasarkan ID dari yang paling awal.
+- getCustomerById(int id)  
+  Mengambil satu data customer berdasarkan ID yang diberikan.
+- insertCustomer(Customers customer)  
+  Menyimpan data customer baru ke database. Termasuk nama, email, dan nomor telepon.
+- updateCustomer(Customers customer)  
+  Mengubah data customer yang sudah ada berdasarkan ID. Data seperti nama, email, dan nomor telepon akan diperbarui.
+
+Highlight logika:
+- Setiap method menggunakan PreparedStatement supaya lebih aman dari serangan SQL Injection.
+- Di bagian bawah, ada method mapResultSetToCustomer() yang berfungsi mengubah hasil query (ResultSet) menjadi objek Customers agar bisa diproses di Java.
+- Saat insert atau update, data dimasukkan langsung dari object Customers yang sudah terbentuk dari request.
+  
+Contoh alur:
+
+Client mengirim permintaan POST /customers untuk menambahkan pelanggan baru.
+Server akan:
+- Menerima data seperti nama, email, dan nomor HP dari client.  
+- Mengubah data tersebut menjadi objek Customers.  
+- Memanggil method insertCustomer() untuk menyimpan data ke database.  
+- Jika berhasil, server mengirimkan response sukses ke client bahwa data pelanggan berhasil ditambahkan.
 
 **ReviewsDAO.java**
+-
+ReviewsDAO adalah class yang digunakan untuk mengatur data ulasan atau review dari pelanggan terhadap vila yang mereka sewa. Class ini bisa mengambil review berdasarkan vila atau customer, dan juga bisa menambahkan review baru ke database.
+
+Fungsi utama:
+- getReviewsByVillaId(int villaId)  
+  Mengambil semua review berdasarkan ID vila. Method ini menggunakan JOIN dengan tabel booking dan room_types agar bisa menemukan review mana yang termasuk ke dalam vila tersebut.
+- getReviewsByCustomerId(int customerId)  
+  Mengambil semua review berdasarkan ID customer. Data diambil dari tabel reviews yang dikaitkan dengan bookings.
+- insertReview(Reviews review)  
+  Menambahkan review baru ke dalam database. Data yang disimpan adalah ID booking, rating bintang (star), judul, dan isi ulasan (content).
+
+Highlight logika:
+- Semua query ditulis menggunakan PreparedStatement agar lebih aman dari serangan SQL Injection.
+- Untuk mendapatkan data berdasarkan vila, digunakan query dengan JOIN 3 tabel: reviews → bookings → room_types.
+- Objek Reviews dibuat langsung dari hasil query (ResultSet) untuk memudahkan pemrosesan di Java.
+
 
 **RoomsDAO.java**
+-
+RoomsDAO adalah class yang digunakan untuk mengatur data tipe kamar (room types) dalam sebuah vila. Dengan class ini, server bisa mengambil daftar kamar dari suatu vila, menambahkan kamar baru, mengubah data kamar yang ada, atau menghapus kamar dari database.
+Class ini menggunakan objek Connection untuk berkomunikasi langsung dengan database.
+
+Fungsi utama:
+- getRoomsByVillaId(int villaId)  
+  Mengambil semua tipe kamar berdasarkan ID vila. Misalnya, kita ingin tahu kamar apa saja yang dimiliki oleh vila nomor 3.
+- insertRoom(Rooms room)  
+  Menyimpan tipe kamar baru ke database. Data kamar seperti nama, jumlah kamar, kapasitas orang, fasilitas (AC, wifi, TV, dll.) akan disimpan.
+- updateRoom(Rooms room)  
+  Mengubah data kamar tertentu. Kamar yang dimaksud dicari berdasarkan ID kamar dan ID vila.
+- deleteRoom(int roomId)  
+  Menghapus satu kamar dari database berdasarkan ID kamar.
+
+Highlight logika:
+- Data fasilitas kamar seperti AC, TV, Wi-Fi, shower, kulkas, dan lain-lain disimpan sebagai nilai angka (biasanya 1 = ada, 0 = tidak ada).
+- Semua SQL dijalankan menggunakan PreparedStatement agar aman dari serangan SQL Injection.
+- Method getRoomsByVillaId() akan membaca semua kolom dari tabel room_types dan mengubahnya menjadi object Rooms.
+
+Contoh alur:
+Client ingin menambahkan tipe kamar baru ke vila dengan ID 2.  
+Client mengirim data lewat POST /rooms dengan informasi seperti nama kamar, kapasitas, harga, dan fasilitas.Server akan:
+- Membaca data JSON dan membuat objek Rooms.  
+- Memanggil insertRoom() untuk menyimpan data ke database.  
+- Jika berhasil, server mengirimkan respons bahwa kamar berhasil ditambahkan.
+
 
 **VillaDAO.java**
 
