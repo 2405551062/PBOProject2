@@ -151,6 +151,31 @@ Note :
 DAO (Data Access Object)
 -
 **BookingsDAO.java**
+-
+BookingsDAO adalah class yang digunakan untuk mengatur data pemesanan vila di database. Class ini dipakai untuk mengambil data booking yang sudah ada atau menyimpan data booking baru yang dikirim oleh client. Class ini bekerja dengan database melalui koneksi Connection
+
+Fungsi utama:
+- getBookingsByVillaId(int villaId)
+Mengambil semua data pemesanan yang berkaitan dengan satu vila tertentu. Caranya dengan mencari pemesanan berdasarkan tipe kamar (room_type) yang terhubung ke  vila tersebut. Hasilnya akan diurutkan dari tanggal check-in paling awal.
+- getBookingsByCustomerId(int customerId)
+  Mengambil semua pemesanan berdasarkan ID customer. Hasilnya juga diurutkan dari yang paling awal check-in.
+- insertBooking(Bookings booking)
+ Menyimpan data pemesanan baru ke dalam tabel bookings di database. Termasuk data customer, tipe kamar, tanggal check-in dan check-out, harga, voucher (jika ada), dan status pembayaran
+
+Highlight logika:
+- Pada method getBookingsByVillaId(), digunakan SQL JOIN antara tabel bookings dan room_types supaya bisa tahu pemesanan mana yang termasuk dalam vila tertentu.
+- Method insertBooking() memeriksa apakah ada voucher. Jika tidak ada (null), maka diisi NULL ke database supaya tidak error.
+- Di bagian bawah class, ada method bantu mapResultSetToBooking() yang berfungsi untuk mengubah data dari database (ResultSet) menjadi object Bookings. Ini memudahkan pemrosesan di Java.
+
+Contoh alur:
+ 
+Client ingin memesan vila, lalu mengirim data booking baru lewat POST (misalnya POST /bookings).
+Server akan:
+  -  Menerima data dari client (seperti tanggal check-in, tipe kamar, dll).
+  -  Mengubah data tersebut menjadi objek Bookings.
+  -  Memanggil method insertBooking() untuk menyimpan data ke database.
+  -  jika berhasil, server akan mengirim response ke client bahwa booking berhasil dibuat.
+
 
 **CustomersDAO.java**
 
