@@ -100,7 +100,10 @@ public class Server {
 
                     switch (method) {
                         case "GET":
-                            controller.getVillaById(exchange);
+                            controller.getVillaById(exchange, villaId);
+                            break;
+                        case "PUT":
+                            controller.handleUpdate(exchange, villaId);
                             break;
                         case "DELETE":
                             controller.handleDelete(exchange, villaId);
@@ -126,9 +129,6 @@ public class Server {
                         case "POST":
                             controller.handleCreate(exchange);
                             break;
-                        case "PUT":
-                            controller.handleUpdate(exchange);
-                            break;
                         default:
                             Response res = new Response(exchange);
                             res.setBody("{\"error\":\"Method Not Allowed\"}");
@@ -137,7 +137,7 @@ public class Server {
                     return;
                 }
 
-                sendNotFound(exchange); // fallback if none matched
+                sendNotFound(exchange);
             } catch (Exception e) {
                 e.printStackTrace();
                 sendNotFound(exchange);

@@ -66,7 +66,7 @@ public class Controller {
         }
     }
 
-    public void getVillaById(HttpExchange exchange) {
+    public void getVillaById(HttpExchange exchange, int villaId) {
         Response res = new Response(exchange);
 
         try {
@@ -155,7 +155,7 @@ public class Controller {
         }
     }
 
-    public void handleUpdate(HttpExchange exchange) {
+    public void handleUpdate(HttpExchange exchange, int id) {
         Response res = new Response(exchange);
         Request req = new Request(exchange);
 
@@ -171,13 +171,12 @@ public class Controller {
                 return;
             }
 
-            Integer id = (Integer) reqBody.get("id");
             String name = (String) reqBody.get("name");
             String description = (String) reqBody.get("description");
             String address = (String) reqBody.get("address");
 
-            if (id == null || name == null || description == null || address == null) {
-                res.setBody("{\"error\": \"Missing required fields: id, name, description, address\"}");
+            if (name == null || description == null || address == null) {
+                res.setBody("{\"error\": \"Missing required fields: name, description, address\"}");
                 res.send(HttpURLConnection.HTTP_BAD_REQUEST);
                 return;
             }
@@ -192,15 +191,21 @@ public class Controller {
             villa.setName(name);
             villa.setDescription(description);
             villa.setAddress(address);
-            villaDAO.updateVilla(villa);
+            boolean success = villaDAO.updateVilla(villa);
 
-            res.setBody("{\"message\": \"Villa updated successfully\"}");
-            res.send(HttpURLConnection.HTTP_OK);
+            if (success) {
+                res.setBody("{\"message\": \"Villa updated successfully\"}");
+                res.send(HttpURLConnection.HTTP_OK);
+            } else {
+                res.setBody("{\"error\": \"Failed to update villa\"}");
+                res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
+            }
 
         } catch (UnauthorizedException e) {
             res.setBody("{\"error\": \"Unauthorized\"}");
             res.send(401);
         } catch (Exception e) {
+            e.printStackTrace();
             res.setBody("{\"error\": \"Internal Server Error\"}");
             res.send(HttpURLConnection.HTTP_INTERNAL_ERROR);
         }
