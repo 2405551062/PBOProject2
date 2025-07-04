@@ -313,18 +313,138 @@ Ketika pelanggan melakukan pemesanan, mereka bisa menggunakan kode voucher ini u
 Exception
 -
 **UnauthorizedException.java**
+-
+Class UnauthorizedException adalah exception khusus yang digunakan untuk menangani kasus autorisasi yang gagal, yaitu ketika client tidak memiliki hak akses terhadap resource tertentu di API. Biasanya ini digunakan dalam proses autentikasi menggunakan API key atau token.
+
+Fungsi utama:
+- Menandai bahwa client tidak memiliki hak akses ke resource tertentu.
+- Menghasilkan response dengan status 401 Unauthorized.
+  
+Highlight logika:
+- Merupakan turunan dari class Exception.
+- Menerima parameter pesan error (String message) saat exception dibuat.
+- Umumnya digunakan untuk autentikasi API sederhana (misalnya validasi API key di header).
+
+Contoh alur:
+- Client mengirim request tanpa menyertakan header X-API-KEY.
+- Server memeriksa dan menemukan bahwa tidak ada API key atau key-nya tidak valid.
+- Server melempar throw new UnauthorizedException("API key tidak valid").
+- Server mengirim response dengan status 401 dan pesan error ke client.
+
+Note:
+- Class UnauthorizedException dibuat untuk menangani autentikasi yang gagal agar sistem lebih aman.
+- Memisahkan logika error 401 dari error lainnya sehingga response lebih spesifik dan mudah dipahami client.
+- Dapat dikembangkan untuk sistem autentikasi lanjutan seperti token, session, atau OAuth di masa depan.
 
 Model
 -
 **Bookings.java**
+-
+Class Bookings digunakan untuk merepresentasikan data pemesanan vila oleh pelanggan. Class ini menyimpan seluruh informasi yang dibutuhkan dalam satu transaksi booking, termasuk data pelanggan, kamar, tanggal menginap, harga, status pembayaran, hingga status check-in dan check-out.
+
+Fungsi utama:
+- Menyimpan data pemesanan dalam bentuk objek Java.
+- Digunakan untuk membuat, membaca, atau mengupdate data booking di dalam sistem.
+- Menyediakan getter dan setter untuk setiap field agar bisa diakses dan dimodifikasi dengan aman.
+
+Highlight logika:
+- Memiliki dua konstruktor: satu konstruktor kosong (no-args constructor) untuk kebutuhan default dan deserialisasi JSON, serta satu konstruktor lengkap untuk inisialisasi semua data booking.
+- Field voucher menggunakan tipe Integer (bukan int) agar bisa menyimpan nilai null jika tidak ada voucher yang digunakan.
+- Field hasCheckedIn dan hasCheckedOut menggunakan tipe int sebagai indikator status (misalnya 0 = belum, 1 = sudah).
+- Data yang disimpan di class ini biasanya berasal dari request client atau hasil query dari database.
+
+Contoh alur:
+- Client mengirim data pemesanan melalui request POST /bookings.
+- Server mengubah data JSON dari client menjadi objek Bookings.
+- Objek ini digunakan untuk menyimpan data ke database atau mengembalikannya sebagai response JSON.
 
 **Customers.java**
+-
+Class Customers digunakan untuk merepresentasikan data pelanggan dalam sistem pemesanan vila. Class ini menyimpan informasi dasar pelanggan seperti nama, email, dan nomor telepon yang diperlukan saat melakukan pemesanan.
+
+Fungsi utama:
+- Menyimpan dan mengelola data pelanggan dalam bentuk objek Java.
+- Digunakan dalam proses input data pelanggan baru, pengambilan data pelanggan berdasarkan ID, atau pembaruan data pelanggan.
+- Menyediakan getter dan setter untuk tiap atribut agar data bisa diakses dan dimodifikasi dengan aman.
+
+Highlight logika:
+- Memiliki dua konstruktor: satu konstruktor kosong (no-args constructor) untuk kebutuhan deserialisasi JSON, dan satu konstruktor lengkap (full-args) untuk inisialisasi data.
+- Field seperti name, email, dan phone bertipe String untuk menyimpan informasi pelanggan dengan fleksibel.
+- Class ini umumnya digunakan dalam proses pemetaan antara database dan objek Java melalui DAO.
+
+Contoh alur:
+- Client mengirim data pelanggan baru melalui request POST /customers.
+- Server menerima data tersebut dan membentuk objek Customers.
+- Objek ini kemudian dikirim ke CustomersDAO untuk disimpan ke dalam database.
+- Saat dibutuhkan, server juga dapat mengembalikan data ini ke client dalam format JSON.
 
 **Reviews.java**
+-
+Class Reviews digunakan untuk merepresentasikan data ulasan (review) dari pelanggan terhadap vila yang telah mereka pesan. Informasi yang disimpan dalam class ini mencakup ID booking, jumlah bintang (rating), judul ulasan, dan isi ulasan.
+
+Fungsi utama:
+- Menyimpan data review dalam bentuk objek Java.
+- Digunakan saat pelanggan mengirim ulasan melalui API, maupun saat mengambil data review dari database.
+- Menyediakan getter dan setter untuk setiap atribut agar data bisa diproses lebih mudah.
+
+Highlight logika:
+Terdapat tiga konstruktor:
+- Konstruktor lengkap (full constructor) yang menyertakan semua data termasuk booking ID.
+- Konstruktor tanpa booking, digunakan jika ID booking dikelola di tempat lain.
+- Konstruktor kosong (no-args constructor) dibutuhkan untuk deserialisasi otomatis, seperti saat parsing JSON.
+Field booking menandakan review ini berasal dari pemesanan mana, star digunakan untuk rating 1–5. Sedangkan title dan content menyimpan ulasan pelanggan secara ringkas dan detail.
+
+Contoh alur:
+- Pelanggan menyelesaikan pemesanan dan mengirim ulasan melalui request POST /reviews.
+- Server membentuk objek Reviews dari data tersebut.
+- Objek digunakan untuk disimpan ke database atau dikembalikan ke client
 
 **Rooms.java**
+-
+Class Rooms berfungsi sebagai representasi dari tipe kamar yang tersedia di dalam sebuah vila. Informasi yang disimpan mencakup detail lengkap mulai dari jumlah unit kamar, kapasitas tamu, harga, ukuran tempat tidur, hingga fasilitas tambahan seperti meja, AC, TV, Wi-Fi, dan lainnya.
+
+Fungsi utama:
+- Menyimpan informasi detail tentang tipe kamar yang dimiliki oleh vila.
+- Menyediakan data kamar yang bisa ditampilkan ke pengguna saat browsing vila.
+- Digunakan sebagai referensi dalam proses booking kamar oleh pelanggan.
+- Menyediakan data pendukung untuk pencarian dan filter berdasarkan fasilitas kamar.
+
+Highlight logika:
+- Atribut villa menunjukkan relasi bahwa kamar ini milik vila tertentu.
+- Properti seperti hasDesk, hasAc, hasTv, dan lainnya menunjukkan keberadaan fasilitas tertentu. Nilainya biasanya berupa angka 1 (ada) atau 0 (tidak ada).
+- Getter dan setter disediakan lengkap untuk setiap field agar data bisa dimanipulasi atau ditampilkan dengan mudah.
+- Data bedSize, capacity, dan price sangat penting untuk memberikan gambaran detail tentang kamar kepada pengguna.
+
+Contoh alur:
+Misalnya, pengguna membuka aplikasi dan ingin melihat tipe kamar yang tersedia di salah satu vila.
+- Client mengirim request ke server (misalnya GET /rooms?villa=1).
+- Server mengambil daftar tipe kamar dari database yang sesuai dengan ID vila tersebut.
+- Data kamar dikonversi ke dalam bentuk objek Rooms, lalu diubah ke JSON.
+- Client menampilkan daftar kamar dengan fasilitas dan harga kepada pengguna.
 
 **Villas.java**
+-
+Class Villas merupakan representasi dari entitas vila yang tersedia dalam sistem. Setiap vila memiliki informasi dasar seperti nama, deskripsi singkat, dan alamat lokasi. Data ini menjadi fondasi utama yang digunakan dalam menampilkan daftar vila kepada pelanggan serta menghubungkannya dengan kamar (Rooms) yang dimiliki.
+
+Fungsi utama:
+- Menyimpan informasi identitas dan lokasi vila dalam bentuk objek Java.
+- Digunakan untuk menampilkan daftar vila yang tersedia kepada pengguna.
+- Menjadi referensi utama dalam pemetaan tipe kamar dan pemesanan.
+- Mempermudah proses insert, update, dan fetch data vila dari database.
+
+Highlight logika:
+Class ini memiliki tiga jenis konstruktor:
+- Full constructor digunakan saat semua data vila sudah diketahui (biasanya saat pengambilan data dari database).
+- Constructor tanpa ID dipakai saat membuat data vila baru (karena ID akan di-generate otomatis oleh database).
+- No-args constructor penting untuk proses deserialisasi otomatis (misalnya saat parsing JSON atau mapping JDBC).
+Setiap properti seperti name, description, dan address memiliki getter dan setter untuk fleksibilitas pemrosesan.
+
+Contoh alur:
+Misalnya, admin ingin menambahkan vila baru ke dalam sistem:
+- Admin mengisi formulir berisi nama, deskripsi, dan alamat vila.
+- Data dikirim ke server dalam format JSON.
+- Server membentuk objek Villas dari request tersebut, lalu mengirimkannya ke DAO untuk disimpan di database.
+- Jika berhasil, sistem akan menampilkan daftar vila baru tersebut kepada pengguna.
 
 **Vouchers**
 
