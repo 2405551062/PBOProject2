@@ -331,6 +331,7 @@ Model
 util
 -
 **DB.java**
+-
 DB adalah class utilitas yang bertanggung jawab untuk mengatur koneksi ke database SQLite yang digunakan oleh aplikasi. Class ini memastikan hanya ada satu koneksi aktif yang digunakan bersama oleh semua bagian sistem yang membutuhkan akses database.
 
 Fungsi utama:
@@ -350,6 +351,7 @@ Contoh alur:
 - Query dijalankan menggunakan koneksi tersebut, lalu hasilnya diproses dan dikembalikan ke bagian yang membutuhkan.
 
 **QueryParser.java**
+-
 QueryParser adalah class utilitas yang digunakan untuk memproses query string dari URL, dan mengubahnya menjadi pasangan key-value dalam bentuk Map. Ini sangat berguna untuk mengambil parameter dari URL saat server menerima permintaan GET atau POST yang mengandung data dalam format query.
 
 Fungsi utama:
@@ -371,6 +373,7 @@ Contoh alur:
 - Data ini bisa digunakan untuk mencari data dalam database atau menjalankan logika lainnya.
 
 **AuthUtil.java**
+-
 AuthUtil adalah class utilitas yang digunakan untuk memeriksa apakah permintaan HTTP (request) yang masuk memiliki hak akses (otorisasi) yang sesuai. Class ini berfungsi sebagai bagian dari sistem keamanan API, memastikan bahwa hanya pengguna yang memiliki API key yang benar yang dapat mengakses endpoint tertentu.
 
 Fungsi utama:
