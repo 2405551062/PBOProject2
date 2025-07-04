@@ -394,6 +394,7 @@ Contoh alur:
 API Demonstration
 -
 **Run Program**
+
 Gunakan perintah berikut untuk mengkompilasi semua file Java dalam proyek, termasuk DAO, pengontrol, model, utilitas, dan pengecualian khusus
 
 1. javac -cp ".;lib\sqlite-jdbc-3.42.0.0.jar;lib\jackson-annotations-2.13.3.jar;lib\jackson-core-2.13.3.jar;lib\jackson-databind-2.13.3.jar" src\Tugas2\*.java src\Tugas2\DAO\*.java src\Tugas2\Controller\*.java src\Tugas2\Model\*.java src\Tugas2\util\*.java src\Tugas2\Exception\*.java
