@@ -331,10 +331,62 @@ Model
 util
 -
 **DB.java**
+DB adalah class utilitas yang bertanggung jawab untuk mengatur koneksi ke database SQLite yang digunakan oleh aplikasi. Class ini memastikan hanya ada satu koneksi aktif yang digunakan bersama oleh semua bagian sistem yang membutuhkan akses database.
+
+Fungsi utama:
+- getConnection()
+  Metode ini akan mengembalikan objek Connection yang bisa digunakan untuk menjalankan query SQL. Jika belum ada koneksi yang terbuka, atau koneksi sebelumnya telah    ditutup, maka sistem akan membuat koneksi baru ke file database vbook.db.
+
+Highlight logika:
+- Digunakan SQLite sebagai sistem basis data, dengan path file database: vbook.db.
+- Pola yang digunakan adalah lazy initialization—koneksi baru hanya dibuat saat dibutuhkan (saat belum ada koneksi aktif).
+- Koneksi disimpan sebagai variabel statis (conn), sehingga bisa digunakan kembali tanpa membuka koneksi baru setiap kali.
+- Menggunakan DriverManager.getConnection() untuk membuat koneksi ke database SQLite.
+
+Contoh alur:
+- Sistem perlu menjalankan query SQL, misalnya untuk mengambil data voucher.
+- Class seperti VouchersDAO memanggil DB.getConnection() untuk mendapatkan objek Connection.
+- Jika koneksi belum ada atau sudah tertutup, class DB membuat koneksi baru ke database vbook.db.
+- Query dijalankan menggunakan koneksi tersebut, lalu hasilnya diproses dan dikembalikan ke bagian yang membutuhkan.
 
 **QueryParser.java**
+QueryParser adalah class utilitas yang digunakan untuk memproses query string dari URL, dan mengubahnya menjadi pasangan key-value dalam bentuk Map. Ini sangat berguna untuk mengambil parameter dari URL saat server menerima permintaan GET atau POST yang mengandung data dalam format query.
+
+Fungsi utama:
+- parseQueryParams(String query)
+  Metode ini menerima query string (contohnya: name=Adi&umur=21) dan mengubahnya menjadi objek Map<String, String> yang berisi pasangan nama-parameter dan nilainya.    Jika query kosong atau null, akan mengembalikan map kosong.
+
+Highlight logika:
+- Query string dipisah berdasarkan simbol & untuk mendapatkan tiap parameter.
+- Setiap parameter kemudian dipecah menjadi key dan value menggunakan simbol =.
+- URLDecoder.decode() digunakan untuk memastikan bahwa karakter yang di-encode di URL (seperti %20 untuk spasi) dikembalikan ke bentuk aslinya.
+- Encoding yang digunakan adalah UTF-8, sesuai standar web modern.
+
+Contoh alur:
+- Sebuah request datang ke server dengan query string seperti: ?kode=DISC10&kategori=makanan%20ringan
+- Server memanggil QueryParser.parseQueryParams(query).
+- Fungsi akan mengembalikan map berisi:
+  * "kode" → "DISC10"
+  * "kategori" → "makanan ringan"
+- Data ini bisa digunakan untuk mencari data dalam database atau menjalankan logika lainnya.
 
 **AuthUtil.java**
+AuthUtil adalah class utilitas yang digunakan untuk memeriksa apakah permintaan HTTP (request) yang masuk memiliki hak akses (otorisasi) yang sesuai. Class ini berfungsi sebagai bagian dari sistem keamanan API, memastikan bahwa hanya pengguna yang memiliki API key yang benar yang dapat mengakses endpoint tertentu.
+
+Fungsi utama:
+- isAuthorized(HttpExchange exchange)
+  Fungsi ini memeriksa header dari permintaan HTTP untuk melihat apakah terdapat header Authorization. Jika ada, nilainya dibandingkan dengan API_KEY yang telah        ditentukan dalam class Main. Jika cocok, maka permintaan dianggap sah (authorized), dan fungsi mengembalikan true; jika tidak cocok atau tidak ada, maka false.
+
+Highlight logika:
+- Header Authorization dibaca langsung dari objek HttpExchange, yang merupakan bagian dari framework HttpServer bawaan Java.
+- Perbandingan dilakukan dengan nilai Main.API_KEY, yang diasumsikan telah ditetapkan sebelumnya secara statis.
+- Metode ini digunakan untuk melindungi endpoint dari akses yang tidak sah, tanpa perlu sistem login yang kompleks.
+
+Contoh alur:
+- Klien (misalnya aplikasi mobile atau web frontend) mengirim request ke server untuk mengambil data voucher.
+- Dalam request tersebut, klien menyertakan API key pada header Authorization.
+- Server menerima request dan memanggil AuthUtil.isAuthorized(exchange) untuk memverifikasi apakah API key-nya valid.
+- Jika API key cocok, request diproses. Jika tidak cocok, server dapat mengembalikan respons error seperti 401 Unauthorized.
 
 API Demonstration
 -
